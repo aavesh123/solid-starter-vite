@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useCategories } from "../../hooks/useCategories";
+import { TransformedCategory } from "../../types/purplle";
 import "./CategoriesPage.css";
 
-interface Category {
-  id: string;
-  title: string;
-  image: string;
-  gradient: string;
-  isExpanded: boolean;
-}
+// Using the TransformedCategory interface from types
+type Category = TransformedCategory;
 
 const CategoriesPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([
@@ -41,56 +38,22 @@ const CategoriesPage: React.FC = () => {
     },
   ]);
 
-  const [apiData, setApiData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
+  // Use custom hook to fetch categories from the API
+  const { categories: apiCategories, loading, error: apiError, rawData: apiData } = useCategories();
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      // Note: This API call may fail due to CORS restrictions
-      // In a real application, you would need to proxy this request through your backend
-      const response = await fetch('https://www.purplle.com/api/v2/shop/category_menu', {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json, text/plain, */*',
-          'accept-language': 'en-GB,en;q=0.9',
-          'content-type': 'application/x-www-form-urlencoded',
-          'is_ssr': 'false',
-          'mode_device': 'mobile',
-          'ngsw-bypass': 'true',
-          'priority': 'u=1, i',
-          'referer': 'https://www.purplle.com/wv/categories',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-origin',
-          'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setApiData(data);
-        console.log('API Response:', data);
-        
-        // If API data is available, you could update categories here
-        // For now, we'll keep the static categories
-      } else {
-        console.error('Failed to fetch categories:', response.status);
-        setApiError(`API request failed with status: ${response.status}`);
-        // Continue with static categories even if API fails
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setApiError('Failed to connect to the API. Using static categories.');
-      // Continue with static categories even if API fails
-    } finally {
-      setLoading(false);
+  // Update categories with API data when available
+  React.useEffect(() => {
+    if (apiCategories && apiCategories.length > 0) {
+      const transformedCategories = apiCategories.map((category: any) => ({
+        id: category.id,
+        title: category.title,
+        image: category.image,
+        gradient: category.gradient,
+        isExpanded: false,
+      }));
+      setCategories(transformedCategories);
     }
-  };
+  }, [apiCategories]);
 
   const toggleCategory = (categoryId: string) => {
     setCategories(prevCategories =>
@@ -185,6 +148,12 @@ const CategoriesPage: React.FC = () => {
           </div>
         ))}
       </div>
+      {apiData && (
+        <div>
+          <h1>API Data</h1>
+          <pre>{JSON.stringify(apiData, null, 2)}</pre>
+        </div>
+      )}
     </div>
   );
 };

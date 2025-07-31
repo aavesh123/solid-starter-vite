@@ -8,6 +8,7 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 import dataProvider from "@refinedev/simple-rest";
+import { purplleDataProvider } from "./providers/purplleDataProvider";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import "./App.css";
 import { Layout } from "./components/layout";
@@ -32,7 +33,10 @@ function App() {
       <RefineKbarProvider>
         <DevtoolsProvider>
           <Refine
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={{
+              default: dataProvider("https://api.fake-rest.refine.dev"),
+              purplle: purplleDataProvider,
+            }}
             routerProvider={routerBindings}
             resources={[
               {
@@ -53,6 +57,7 @@ function App() {
                 show: "/categories/show/:id",
                 meta: {
                   canDelete: true,
+                  dataProviderName: "purplle",
                 },
               },
             ]}
